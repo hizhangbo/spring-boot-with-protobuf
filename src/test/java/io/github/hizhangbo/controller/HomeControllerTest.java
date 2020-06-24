@@ -88,8 +88,34 @@ class HomeControllerTest {
     }
 
     @Test
-    public void test3() {
+    public void test3() throws URISyntaxException, IOException {
 
+        URI uri = new URI("http", null, "localhost", 8081, "/user", "", null);
+        HttpPost post = new HttpPost(uri);
+        post.setHeader("Content-Type", "application/octet-stream;charset=utf-8");
 
+        CloseableHttpClient httpClient = HttpClients.createDefault();
+        HttpResponse response = httpClient.execute(post);
+        System.out.println(response.getStatusLine().getStatusCode());
+    }
+
+    @Test
+    public void test4() throws IOException {
+        URL url = new URL("http://localhost:8081/user");
+//        byte[] bytes =
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setDoOutput(true);
+        conn.setDoInput(true);
+        conn.setUseCaches(false);
+        conn.setRequestMethod("POST");
+        conn.setConnectTimeout(5000);
+        conn.setReadTimeout(5000);
+        conn.setRequestProperty("Content-Type", "application/x-protobuf");
+        conn.setRequestProperty("Accept", "application/x-protobuf");
+        conn.connect();
+        OutputStream out = conn.getOutputStream();
+//        out.write(bytes);
+        out.flush();
+        out.close();
     }
 }
