@@ -1,0 +1,2 @@
+# 生成 protobuf 对象
+protoc --java_out=../main/java user.proto
