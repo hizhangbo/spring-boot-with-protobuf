@@ -1,5 +1,7 @@
 package io.github.hizhangbo.controller;
 
+import com.googlecode.protobuf.format.JsonFormat;
+import io.github.hizhangbo.App;
 import io.github.hizhangbo.model.UserProto;
 import io.github.hizhangbo.utils.HttpUtils;
 import org.apache.http.HttpResponse;
@@ -8,12 +10,14 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.junit.Assert;
 import org.junit.Before;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -21,13 +25,17 @@ import org.springframework.web.context.WebApplicationContext;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.*;
+import java.nio.charset.StandardCharsets;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
-@SpringBootTest
 @RunWith(SpringRunner.class)
+@SpringBootTest(classes = {App.class})
 class HomeControllerTest {
 
     @Autowired
@@ -117,5 +125,32 @@ class HomeControllerTest {
 //        out.write(bytes);
         out.flush();
         out.close();
+    }
+
+    @Test
+    public void index() throws Exception {
+        mvc.perform(get("/").contentType(MediaType.APPLICATION_JSON)).andDo(print());
+//        CloseableHttpClient httpClient = HttpClients.createDefault();
+//        HttpGet request = new HttpGet("/");
+//        HttpResponse httpResponse = httpClient.execute(request);
+//        InputStream inputStream = httpResponse.getEntity().getContent();
+//        String result = CharStreams.toString(new InputStreamReader(inputStream, Charsets.UTF_8));
+//        System.out.println(result);
+    }
+
+    @Test
+    public void executeHttpRequest() throws IOException {
+        CloseableHttpClient httpClient = HttpClients.createDefault();
+        HttpPost request = new HttpPost("http://localhost:8081/user");
+        HttpResponse httpResponse = httpClient.execute(request);
+        InputStream inputStream = httpResponse.getEntity().getContent();
+        String s = convertProtobufMessageStreamToJsonString(inputStream);
+        System.out.println(s);
+    }
+
+    private String convertProtobufMessageStreamToJsonString(InputStream protobufStream) throws IOException {
+        JsonFormat jsonFormat = new JsonFormat();
+        UserProto.User user = UserProto.User.parseFrom(protobufStream);
+        return jsonFormat.printToString(user);
     }
 }
